@@ -1014,7 +1014,7 @@ body {
         <input type="file" id="csvFileInput" accept=".csv,.txt" style="display:none;">
         <div class="btn-row" style="margin-top:6px;">
           <button class="btn" id="cleanDupesBtn" title="Scan and merge duplicate transactions">🧹 Clean Duplicates</button>
-          <button class="btn danger" id="clearAllBtn">🗑️ Clear All</button>
+          <button class="btn danger" id="clearAllBtn" title="Permanently delete all transactions from device & Google Sheet">🗑️ Clear All Transactions</button>
         </div>
       </div>
 
@@ -1289,7 +1289,7 @@ body {
     <!-- Tab 2: Transaction History -->
     <div id="debtTabHistory" style="display:none;">
       <div id="debtFilterHeader" style="display:none; padding: 4px 6px 8px; font-size: 0.65rem; color: var(--accent); justify-content:space-between; align-items:center;">
-        <span id="debtFilterName">Showing: Shafik</span>
+        <span id="debtFilterName">Showing: Staff</span>
         <button id="debtClearFilterBtn" style="background:var(--bg4); border:none; color:var(--text2); padding:2px 8px; border-radius:10px; cursor:pointer; font-size:0.6rem;">✕ Show All</button>
       </div>
       <div class="tx-table-wrap" id="debtTxList" style="max-height: 280px; overflow-y: auto;"></div>
@@ -1325,7 +1325,10 @@ body {
       <button class="btn" id="syncPull">⬇ Pull Now</button>
     </div>
     <div class="sync-actions">
+      <button class="btn danger" id="syncWipeBtn" title="Wipe all remote transactions from Google Sheet">🧹 Wipe Sheet Transactions</button>
       <button class="btn danger" id="syncDisconnect">Disconnect</button>
+    </div>
+    <div class="sync-actions" style="margin-top:6px;">
       <button class="btn" id="syncClose">Close</button>
     </div>
   </div>
@@ -1345,6 +1348,8 @@ const state = {
   budgets: {},
   recurring: [],
   settings: { theme: 'dark' },
+  deletedIds: [],              // Tombstones of deleted transactions to prevent resurrection
+  transactionsClearedAt: 0,    // Timestamp when all transactions were wiped
   editingId: null,
   editingCatId: null,
   editingRecId: null,
@@ -1458,7 +1463,7 @@ function toast(msg, isError) {
   t.style.borderColor = isError ? 'var(--danger)' : 'var(--border)';
   t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
 }
 
 function escapeHtml(s) {
@@ -1487,7 +1492,7 @@ function fmtMonthShort(key) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// STORAGE & DEDUPLICATION
+// STORAGE & BULLETPROOF DELETION
 // ═══════════════════════════════════════════════════════════════
 function saveLocalOnly() {
   try {
@@ -1496,7 +1501,9 @@ function saveLocalOnly() {
       categories: state.categories,
       budgets: state.budgets,
       recurring: state.recurring,
-      settings: state.settings
+      settings: state.settings,
+      deletedIds: state.deletedIds || [],
+      transactionsClearedAt: state.transactionsClearedAt || 0
     }));
   } catch (e) { console.error('Save failed:', e); }
 }
@@ -1512,8 +1519,15 @@ function cleanDuplicates() {
   const seen = new Map();
   let duplicatesRemoved = 0;
   const now = Date.now();
+  const deletedSet = new Set(state.deletedIds || []);
+  const clearedAt = state.transactionsClearedAt || 0;
 
-  const active = state.transactions.filter(t => !t.deleted);
+  const active = state.transactions.filter(t => {
+    if (t.deleted) return false;
+    if (deletedSet.has(t.id)) return false;
+    if (clearedAt > 0 && (t.createdAt || 0) <= clearedAt) return false;
+    return true;
+  });
   active.sort((a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0));
 
   active.forEach(t => {
@@ -1531,12 +1545,16 @@ function cleanDuplicates() {
       if (t.recId || timeDiff < 180000 || t.id === existing.id) {
         t.deleted = true;
         t.updatedAt = now;
+        if (!state.deletedIds.includes(t.id)) state.deletedIds.push(t.id);
         duplicatesRemoved++;
         return;
       }
     }
     seen.set(key, t);
   });
+
+  // Filter state.transactions
+  state.transactions = state.transactions.filter(t => !t.deleted && !deletedSet.has(t.id));
 
   if (duplicatesRemoved > 0) {
     saveLocalOnly();
@@ -1556,8 +1574,13 @@ function load() {
       if (d.budgets && typeof d.budgets === 'object') state.budgets = d.budgets;
       if (Array.isArray(d.recurring)) state.recurring = d.recurring;
       if (d.settings) state.settings = Object.assign(state.settings, d.settings);
+      if (Array.isArray(d.deletedIds)) state.deletedIds = d.deletedIds;
+      if (d.transactionsClearedAt) state.transactionsClearedAt = d.transactionsClearedAt;
     }
   } catch (e) { console.error('Load failed:', e); }
+
+  if (!Array.isArray(state.deletedIds)) state.deletedIds = [];
+  if (!state.transactionsClearedAt) state.transactionsClearedAt = 0;
 
   if (!state.categories.length) {
     state.categories = DEFAULT_CATEGORIES.map(c => Object.assign({}, c, { updatedAt: Date.now(), deleted: false }));
@@ -1582,8 +1605,15 @@ function load() {
     if (typeof r.deleted === 'undefined') r.deleted = false;
     if (typeof r.updatedAt === 'undefined') r.updatedAt = 0;
   });
-  state.transactions.forEach(t => {
-    if (typeof t.deleted === 'undefined') t.deleted = false;
+
+  // Purge any deleted transactions from state immediately
+  const deletedSet = new Set(state.deletedIds);
+  const clearedAt = state.transactionsClearedAt;
+  state.transactions = state.transactions.filter(t => {
+    if (t.deleted) return false;
+    if (deletedSet.has(t.id)) return false;
+    if (clearedAt > 0 && (t.createdAt || 0) <= clearedAt) return false;
+    return true;
   });
 
   if (!state.categories.find(c => c.id === DEFAULT_CATEGORY_ID && !c.deleted)) {
@@ -1620,6 +1650,12 @@ function processRecurring() {
     
     // Deterministic ID prevents multi-device duplicate generation
     const deterministicId = `rec_${rec.id}_${thisMonth}`;
+    const deletedSet = new Set(state.deletedIds || []);
+    if (deletedSet.has(deterministicId)) {
+      rec.lastRun = thisMonth;
+      return;
+    }
+
     const exists = state.transactions.some(t => 
       !t.deleted && (
         t.id === deterministicId || 
@@ -1651,9 +1687,18 @@ function getCategory(id) {
   return state.categories.find(c => c.id === id && !c.deleted)
     || { name: 'Staff/Other', icon: '🤝', color: '#6b7280', type: 'debt' };
 }
+
 function activeTransactions() {
-  return state.transactions.filter(t => !t.deleted);
+  const deletedSet = new Set(state.deletedIds || []);
+  const clearedAt = state.transactionsClearedAt || 0;
+  return state.transactions.filter(t => {
+    if (t.deleted) return false;
+    if (deletedSet.has(t.id)) return false;
+    if (clearedAt > 0 && (t.createdAt || 0) <= clearedAt) return false;
+    return true;
+  });
 }
+
 function getBudgetValue(catId) {
   const b = state.budgets[catId];
   if (!b) return 0;
@@ -2551,7 +2596,7 @@ function renderRecCatGrid() {
 // ═══════════════════════════════════════════════════════════════
 function buildNoteSuggestions(query) {
   const seen = new Map();
-  state.transactions.forEach(t => {
+  activeTransactions().forEach(t => {
     if (!t.note) return;
     const note = t.note.trim();
     if (!note) return;
@@ -2766,11 +2811,21 @@ function continueTransaction() {
   setTimeout(() => $('amountInput').focus(), 50);
 }
 
+// PERMANENT DELETION: Tombstones ID so it never resurrects
 function deleteTransaction() {
   if (!state.editingId) return;
   if (!confirm('Delete this transaction?')) return;
-  const t = state.transactions.find(x => x.id === state.editingId);
-  if (t) { t.deleted = true; t.updatedAt = Date.now(); }
+  const idToDelete = state.editingId;
+  const now = Date.now();
+
+  if (!state.deletedIds) state.deletedIds = [];
+  if (!state.deletedIds.includes(idToDelete)) {
+    state.deletedIds.push(idToDelete);
+  }
+
+  // Remove directly from state
+  state.transactions = state.transactions.filter(x => x.id !== idToDelete);
+
   save();
   renderAll();
   populateSearchDropdowns();
@@ -2875,9 +2930,9 @@ function saveCategory() {
 
 function deleteCategory() {
   if (!state.editingCatId) return;
-  const inUse = state.transactions.filter(t => t.category === state.editingCatId && !t.deleted).length;
+  const inUse = activeTransactions().filter(t => t.category === state.editingCatId).length;
   const msg = inUse > 0
-    ? `This category has ${inUse} transaction(s). Continue?`
+    ? `This category has ${inUse} active transaction(s). Continue?`
     : 'Delete this category?';
   if (!confirm(msg)) return;
 
@@ -3212,12 +3267,16 @@ function syncBuildPayload() {
     version: 2,
     device: SYNC.deviceName,
     updatedAt: Date.now(),
+    deletedIds: state.deletedIds || [],
+    transactionsClearedAt: state.transactionsClearedAt || 0,
     data: {
       transactions: state.transactions,
       categories: state.categories,
       budgets: state.budgets,
       recurring: state.recurring,
-      settings: state.settings
+      settings: state.settings,
+      deletedIds: state.deletedIds || [],
+      transactionsClearedAt: state.transactionsClearedAt || 0
     }
   };
 }
@@ -3239,7 +3298,9 @@ function syncComputeHash(payload) {
       return k + '=' + (typeof b === 'object' ? (b.value + '@' + (b.updatedAt || 0)) : b);
     });
   const settings = JSON.stringify(d.settings || {});
-  const s = JSON.stringify([txs, cats, recs, budgets, settings]);
+  const deleted = (d.deletedIds || []).sort().join(',');
+  const cleared = String(d.transactionsClearedAt || 0);
+  const s = JSON.stringify([txs, cats, recs, budgets, settings, deleted, cleared]);
   let h = 0;
   for (let i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h = h & h; }
   return String(h);
@@ -3250,13 +3311,41 @@ function syncApplyRemote(remote) {
   const d = remote.data;
   let changed = false;
 
-  // 1. Transactions Merge (LWW)
+  const deletedSet = new Set(state.deletedIds || []);
+  const clearedAt = state.transactionsClearedAt || 0;
+
+  // Merge remote deletedIds
+  if (Array.isArray(d.deletedIds)) {
+    d.deletedIds.forEach(id => {
+      if (!deletedSet.has(id)) {
+        state.deletedIds.push(id);
+        deletedSet.add(id);
+      }
+    });
+  }
+
+  // Update clear timestamp if remote has newer
+  if (d.transactionsClearedAt && d.transactionsClearedAt > clearedAt) {
+    state.transactionsClearedAt = d.transactionsClearedAt;
+  }
+
+  // 1. Transactions Merge (LWW & Purge)
   if (Array.isArray(d.transactions)) {
     const map = new Map();
     (state.transactions || []).forEach(t => map.set(t.id, t));
     const beforeCount = map.size;
 
     d.transactions.forEach(rt => {
+      // Check if this was deleted or cleared
+      if (deletedSet.has(rt.id)) return;
+      if (state.transactionsClearedAt > 0 && (rt.createdAt || 0) <= state.transactionsClearedAt) return;
+      if (rt.deleted) {
+        deletedSet.add(rt.id);
+        if (!state.deletedIds.includes(rt.id)) state.deletedIds.push(rt.id);
+        if (map.has(rt.id)) map.delete(rt.id);
+        return;
+      }
+
       const local = map.get(rt.id);
       if (!local) {
         map.set(rt.id, Object.assign({ deleted: false }, rt));
@@ -3267,14 +3356,23 @@ function syncApplyRemote(remote) {
         if (rTs > lTs) {
           map.set(rt.id, Object.assign({}, local, rt));
           changed = true;
-        } else if (rTs === lTs && !!rt.deleted !== !!local.deleted) {
-          map.set(rt.id, Object.assign({}, local, { deleted: !!rt.deleted }));
+        } else if (rTs === lTs && !rt.deleted !== !local.deleted) {
+          map.set(rt.id, Object.assign({}, local, { deleted: !rt.deleted }));
           changed = true;
         }
       }
     });
 
-    state.transactions = Array.from(map.values());
+    const filtered = [];
+    map.forEach(t => {
+      if (deletedSet.has(t.id) || (state.transactionsClearedAt > 0 && (t.createdAt || 0) <= state.transactionsClearedAt)) {
+        changed = true;
+      } else {
+        filtered.push(t);
+      }
+    });
+
+    state.transactions = filtered;
     if (state.transactions.length !== beforeCount) changed = true;
   }
 
@@ -3392,7 +3490,7 @@ async function syncPull(showUi) {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const remote = await r.json();
     if (remote.empty) {
-      if (showUi) toast('ℹ️ Sheet is initialized & ready');
+      if (showUi) toast('ℹ️ Sheet is initialized & empty');
       SYNC.isInitialPullDone = true;
       return false;
     }
@@ -3480,6 +3578,45 @@ async function syncPush(showUi, silent) {
   }
 }
 
+// Complete Remote Wipe of Transactions
+async function syncWipeRemote() {
+  if (!SYNC.enabled) return;
+  const payload = {
+    version: 2,
+    device: SYNC.deviceName,
+    updatedAt: Date.now(),
+    action: 'clear_all_transactions',
+    clearAllTransactions: true,
+    transactionsClearedAt: state.transactionsClearedAt,
+    deletedIds: state.deletedIds || [],
+    data: {
+      transactions: [],
+      categories: state.categories,
+      budgets: state.budgets,
+      recurring: state.recurring,
+      settings: state.settings,
+      deletedIds: state.deletedIds || [],
+      transactionsClearedAt: state.transactionsClearedAt
+    }
+  };
+
+  const hash = syncComputeHash(payload);
+  SYNC.lastLocalHash = hash;
+  SYNC.lastRemoteHash = hash;
+  localStorage.setItem(SYNC.HASH_KEY, hash);
+
+  const r = await fetch(SYNC.scriptUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload),
+    redirect: 'follow'
+  });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const res = await r.json();
+  if (res.status === 'error') throw new Error(res.error);
+  return res;
+}
+
 function syncEnqueue() {
   SYNC.queue.push({ queuedAt: Date.now() });
   if (SYNC.queue.length > SYNC.MAX_QUEUE) SYNC.queue.shift();
@@ -3523,7 +3660,6 @@ async function syncStartPolling() {
   syncUpdatePolling(); 
   if (navigator.onLine) {
     await syncPull(false);
-    // After initial pull, if local queue exists, replay it
     if (SYNC.queue.length > 0) {
       await syncReplayQueue();
     }
@@ -3694,7 +3830,6 @@ function bindEvents() {
     });
   });
 
-  // Cycle through all filters including debts
   $('filterBtn').addEventListener('click', () => {
     const opts = ['all', 'expense', 'income', 'debt_given', 'debt_taken'];
     const idx = opts.indexOf(state.filter);
@@ -3736,15 +3871,34 @@ function bindEvents() {
     if (e.target.files && e.target.files[0]) { importCSV(e.target.files[0]); e.target.value = ''; }
   });
   
-  $('clearAllBtn').addEventListener('click', () => {
-    if (!confirm('Delete ALL transactions? This will soft-delete transactions across devices.')) return;
+  // PERMANENT WIPE OF ALL TRANSACTIONS
+  $('clearAllBtn').addEventListener('click', async () => {
+    if (!confirm('Are you sure you want to delete ALL transactions?\n\nThis will permanently delete the entire transaction list across all connected devices and your Google Sheet.')) return;
+    
     const now = Date.now();
+    state.transactionsClearedAt = now;
+    
+    if (!state.deletedIds) state.deletedIds = [];
     state.transactions.forEach(t => {
-      t.deleted = true;
-      t.updatedAt = now;
+      if (!state.deletedIds.includes(t.id)) state.deletedIds.push(t.id);
     });
-    save(); renderAll(); populateSearchDropdowns();
-    toast('🗑️ All transactions cleared');
+
+    state.transactions = [];
+    saveLocalOnly();
+    renderAll();
+    populateSearchDropdowns();
+
+    if (SYNC.enabled) {
+      toast('⏳ Wiping remote Google Sheet...', false);
+      try {
+        await syncWipeRemote();
+        toast('🗑️ All transactions permanently cleared & synced');
+      } catch (e) {
+        toast('🗑️ Cleared locally (offline)', true);
+      }
+    } else {
+      toast('🗑️ All transactions cleared');
+    }
   });
 
   $('searchInput').addEventListener('input', renderSearch);
@@ -3807,6 +3961,22 @@ function bindEvents() {
   $('syncTest').addEventListener('click', syncTestConnection);
   $('syncPush').addEventListener('click', () => syncPush(true));
   $('syncPull').addEventListener('click', () => syncPull(true));
+  
+  $('syncWipeBtn').addEventListener('click', async () => {
+    if (!confirm('Wipe ALL transactions on Google Sheet?\n\nThis will empty the Transactions tab and script properties on your Google Sheet.')) return;
+    try {
+      toast('⏳ Wiping remote sheet...', false);
+      state.transactionsClearedAt = Date.now();
+      state.transactions = [];
+      saveLocalOnly();
+      renderAll();
+      await syncWipeRemote();
+      toast('🧹 Google Sheet transactions wiped');
+    } catch (e) {
+      toast('❌ Wipe failed: ' + e.message, true);
+    }
+  });
+
   $('syncDisconnect').addEventListener('click', () => { if (confirm('Disconnect Google Sheet sync?')) syncDisconnect(); });
 
   document.addEventListener('keydown', e => {
@@ -3893,7 +4063,7 @@ function init() {
   syncUpdateButtonState();
   if (SYNC.enabled) syncStartPolling();
 
-  console.log('💼 Office Expense & Debt Tracker v12 (Real-Time Sync) initialized');
+  console.log('💼 Office Expense & Debt Tracker v12.1 (Tombstone Purge Active) initialized');
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
