@@ -74,7 +74,7 @@ body {
   background: var(--text2); margin-right: 4px; transition: background 0.3s;
 }
 .sync-dot.on { background: #66bb6a; box-shadow: 0 0 6px rgba(102,187,106,0.8); }
-.sync-dot.syncing { background: #ffb74d; animation: pulse 1s infinite; }
+.sync-dot.syncing { background: #ffb74d; animation: pulse 0.8s infinite; }
 .sync-dot.err { background: var(--danger); }
 .icon-btn.sync-btn.err .sync-dot,
 .icon-btn.sync-btn.offline .sync-dot { background: #fff; }
@@ -125,9 +125,11 @@ body {
 .stat-card {
   background: var(--bg2); border: 1px solid var(--border);
   border-radius: 11px; padding: 8px 4px; text-align: center;
-  transition: background 0.15s;
+  transition: all 0.15s;
 }
 .stat-card:hover { background: var(--bg3); }
+.stat-card.clickable { cursor: pointer; }
+.stat-card.clickable:active { transform: scale(0.97); }
 .stat-card .icon { font-size: 1rem; line-height: 1; }
 .stat-card .val {
   font-size: 0.72rem; font-weight: 700; margin-top: 3px;
@@ -138,6 +140,7 @@ body {
   letter-spacing: 0.4px; margin-top: 1px; font-weight: 600;
 }
 .stat-card.debt-card .val { color: var(--warning); }
+.stat-card.debt-card { border-color: rgba(234,179,8,0.25); }
 
 .section-title {
   padding: 6px 14px 4px; font-size: 0.68rem; color: var(--text2);
@@ -719,6 +722,129 @@ body {
 .about-card .about-social a { color: var(--accent); text-decoration: none; font-weight: 700; }
 .about-card .about-social a:hover { text-decoration: underline; }
 
+/* ═══ DEBT MODAL STYLES ═══ */
+.debt-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.debt-sum-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 6px;
+  text-align: center;
+}
+.debt-sum-card .lbl {
+  font-size: 0.52rem;
+  color: var(--text2);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+.debt-sum-card .val {
+  font-size: 0.88rem;
+  font-weight: 800;
+  margin-top: 3px;
+  letter-spacing: -0.3px;
+}
+.debt-sum-card.lent .val { color: var(--debt-given); }
+.debt-sum-card.borrowed .val { color: var(--debt-taken); }
+.debt-sum-card.net .val { color: var(--accent); }
+.debt-sum-card.net.negative .val { color: var(--danger); }
+
+.debt-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+.debt-tab-btn {
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text2);
+  font-size: 0.65rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.debt-tab-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.staff-debt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+  padding-right: 2px;
+}
+.staff-debt-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 9px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.staff-debt-card:hover {
+  background: var(--bg4);
+  border-color: var(--text2);
+}
+.staff-debt-card .s-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.staff-debt-card .s-sub {
+  font-size: 0.58rem;
+  color: var(--text2);
+  margin-top: 2px;
+}
+.staff-debt-card .s-right {
+  text-align: right;
+}
+.staff-debt-card .s-net {
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+.staff-debt-card .s-badge {
+  font-size: 0.5rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 8px;
+  margin-top: 2px;
+  display: inline-block;
+}
+.s-badge.owes-you {
+  background: rgba(234, 179, 8, 0.15);
+  color: var(--debt-given);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+}
+.s-badge.you-owe {
+  background: rgba(168, 85, 247, 0.15);
+  color: var(--debt-taken);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+.s-badge.settled {
+  background: rgba(107, 114, 128, 0.15);
+  color: var(--text2);
+}
+
 .toast {
   position: fixed; bottom: calc(var(--mobile-nav-h) + 20px); left: 50%;
   transform: translateX(-50%) translateY(20px);
@@ -787,7 +913,7 @@ body {
       </div>
     </div>
 
-    <!-- 4 Dashboard Tiles (Count replaced with Net Debt) -->
+    <!-- 4 Dashboard Tiles (Debt Tile is Clickable for Details) -->
     <div class="stats-grid">
       <div class="stat-card">
         <div class="icon">📅</div>
@@ -804,7 +930,7 @@ body {
         <div class="val" id="monthTotal">0/-</div>
         <div class="lbl">Month Exp</div>
       </div>
-      <div class="stat-card debt-card" id="debtTile" title="Net staff debt (Given − Taken)">
+      <div class="stat-card debt-card clickable" id="debtTile" title="Click to view staff debt ledger & breakdown">
         <div class="icon">🤝</div>
         <div class="val" id="netDebtTotal">0/-</div>
         <div class="lbl" id="debtLbl">Net Debt</div>
@@ -887,7 +1013,8 @@ body {
         </div>
         <input type="file" id="csvFileInput" accept=".csv,.txt" style="display:none;">
         <div class="btn-row" style="margin-top:6px;">
-          <button class="btn danger" id="clearAllBtn">🗑️ Clear All Data</button>
+          <button class="btn" id="cleanDupesBtn" title="Scan and merge duplicate transactions">🧹 Clean Duplicates</button>
+          <button class="btn danger" id="clearAllBtn">🗑️ Clear All</button>
         </div>
       </div>
 
@@ -1036,6 +1163,7 @@ body {
   </div>
 </div>
 
+<!-- DAY DETAIL MODAL -->
 <div class="modal-overlay" id="dayModalOverlay">
   <div class="modal">
     <h2 id="dayModalTitle">Transactions</h2>
@@ -1048,6 +1176,7 @@ body {
   </div>
 </div>
 
+<!-- CATEGORY MODAL -->
 <div class="modal-overlay" id="catModalOverlay">
   <div class="modal">
     <h2 id="catModalTitle">Add Category</h2>
@@ -1089,6 +1218,7 @@ body {
   </div>
 </div>
 
+<!-- RECURRING MODAL -->
 <div class="modal-overlay" id="recModalOverlay">
   <div class="modal">
     <h2 id="recModalTitle">Add Recurring Transaction</h2>
@@ -1123,10 +1253,60 @@ body {
   </div>
 </div>
 
+<!-- DEBT DETAIL MODAL (NEW) -->
+<div class="modal-overlay" id="debtModalOverlay">
+  <div class="modal">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <h2 style="margin:0; font-size:1rem;">🤝 Staff Debt & Loan Ledger</h2>
+      <button class="icon-btn" id="debtModalCloseTop" style="border:none; background:transparent; font-size:1.1rem; cursor:pointer;">✕</button>
+    </div>
+    
+    <div class="debt-summary-grid">
+      <div class="debt-sum-card lent">
+        <div class="lbl">Total Lent (পাবো)</div>
+        <div class="val" id="debtModalLent">0/-</div>
+      </div>
+      <div class="debt-sum-card borrowed">
+        <div class="lbl">Borrowed (দেনা)</div>
+        <div class="val" id="debtModalBorrowed">0/-</div>
+      </div>
+      <div class="debt-sum-card net" id="debtModalNetCard">
+        <div class="lbl" id="debtModalNetLbl">Net Debt</div>
+        <div class="val" id="debtModalNet">0/-</div>
+      </div>
+    </div>
+
+    <div class="debt-tabs">
+      <button class="debt-tab-btn active" id="debtTabBtnPeople" data-dtab="people">👤 By Person / Staff</button>
+      <button class="debt-tab-btn" id="debtTabBtnHistory" data-dtab="history">📋 All Debt Transactions</button>
+    </div>
+
+    <!-- Tab 1: Staff / Person List -->
+    <div id="debtTabPeople">
+      <div class="staff-debt-list" id="staffDebtList"></div>
+    </div>
+
+    <!-- Tab 2: Transaction History -->
+    <div id="debtTabHistory" style="display:none;">
+      <div id="debtFilterHeader" style="display:none; padding: 4px 6px 8px; font-size: 0.65rem; color: var(--accent); justify-content:space-between; align-items:center;">
+        <span id="debtFilterName">Showing: Shafik</span>
+        <button id="debtClearFilterBtn" style="background:var(--bg4); border:none; color:var(--text2); padding:2px 8px; border-radius:10px; cursor:pointer; font-size:0.6rem;">✕ Show All</button>
+      </div>
+      <div class="tx-table-wrap" id="debtTxList" style="max-height: 280px; overflow-y: auto;"></div>
+    </div>
+
+    <div class="btn-row" style="margin-top:12px;">
+      <button class="btn" id="debtAddLentBtn" style="color:var(--debt-given); border-color:var(--debt-given);">🤝 + Lent (টাকা দেওয়া)</button>
+      <button class="btn" id="debtAddBorrowedBtn" style="color:var(--debt-taken); border-color:var(--debt-taken);">🤲 + Borrow (টাকা নেওয়া)</button>
+      <button class="btn primary" id="debtCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- GOOGLE SHEETS SYNC MODAL -->
 <div class="sync-overlay" id="syncOverlay">
   <div class="sync-panel">
-    <h2>📊 Google Sheets Sync</h2>
+    <h2>📊 Google Sheets Real-Time Sync</h2>
     <div class="sync-status" id="syncStatus">Not configured</div>
     <div class="sync-field">
       <label>Google Apps Script Web App URL</label>
@@ -1141,8 +1321,8 @@ body {
       <button class="btn" id="syncTest">Test</button>
     </div>
     <div class="sync-actions">
-      <button class="btn" id="syncPush">⬆ Push</button>
-      <button class="btn" id="syncPull">⬇ Pull</button>
+      <button class="btn" id="syncPush">⬆ Push Now</button>
+      <button class="btn" id="syncPull">⬇ Pull Now</button>
     </div>
     <div class="sync-actions">
       <button class="btn danger" id="syncDisconnect">Disconnect</button>
@@ -1182,7 +1362,8 @@ const state = {
   calSelectedDay: null,
   dayModalDate: null,
   charts: { pie: null, trend: null },
-  acActiveIndex: -1
+  acActiveIndex: -1,
+  debtSelectedPerson: null
 };
 
 const DEFAULT_CATEGORIES = [
@@ -1224,14 +1405,30 @@ const DAYS_MINI = ['S','M','T','W','T','F','S'];
 // ═══════════════════════════════════════════════════════════════
 const $ = id => document.getElementById(id);
 const uid = (p) => (p || 'tx') + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-const todayISO = () => new Date().toISOString().split('T')[0];
-const fmt = n => Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + '/-';
-const fmtShort = n => Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 }) + '/-';
+
+// Timezone-safe local ISO date (YYYY-MM-DD)
+const todayISO = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const fmt = n => {
+  const clean = Math.abs(n) < 0.005 ? 0 : n;
+  return Number(clean || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + '/-';
+};
+const fmtShort = n => {
+  const clean = Math.abs(n) < 0.005 ? 0 : n;
+  return Number(clean || 0).toLocaleString('en-US', { maximumFractionDigits: 0 }) + '/-';
+};
 const fmtCompact = n => {
-  const abs = Math.abs(n);
-  if (abs >= 1e6) return (n/1e6).toFixed(1) + 'M/-';
-  if (abs >= 1e3) return (n/1e3).toFixed(1) + 'K/-';
-  return Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 }) + '/-';
+  const clean = Math.abs(n) < 0.005 ? 0 : n;
+  const abs = Math.abs(clean);
+  if (abs >= 1e6) return (clean/1e6).toFixed(1) + 'M/-';
+  if (abs >= 1e3) return (clean/1e3).toFixed(1) + 'K/-';
+  return Number(clean).toLocaleString('en-US', { maximumFractionDigits: 0 }) + '/-';
 };
 
 function evalAmount(input) {
@@ -1269,9 +1466,15 @@ function escapeHtml(s) {
 }
 
 function monthKey(date) {
+  if (!date) return '';
+  if (typeof date === 'string' && date.includes('-')) {
+    const parts = date.split('-');
+    if (parts.length >= 2) return parts[0] + '-' + parts[1].padStart(2, '0');
+  }
   const d = new Date(date);
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
 }
+
 function fmtMonth(key) {
   if (!key) return '';
   const [y, m] = key.split('-');
@@ -1284,9 +1487,9 @@ function fmtMonthShort(key) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// STORAGE
+// STORAGE & DEDUPLICATION
 // ═══════════════════════════════════════════════════════════════
-function save() {
+function saveLocalOnly() {
   try {
     localStorage.setItem('office_expense_data', JSON.stringify({
       transactions: state.transactions,
@@ -1296,7 +1499,51 @@ function save() {
       settings: state.settings
     }));
   } catch (e) { console.error('Save failed:', e); }
-  syncSchedulePush();
+}
+
+function save() {
+  saveLocalOnly();
+  if (SYNC.enabled && SYNC.isInitialPullDone) {
+    syncSchedulePush();
+  }
+}
+
+function cleanDuplicates() {
+  const seen = new Map();
+  let duplicatesRemoved = 0;
+  const now = Date.now();
+
+  const active = state.transactions.filter(t => !t.deleted);
+  active.sort((a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0));
+
+  active.forEach(t => {
+    let key;
+    if (t.recId && t.month) {
+      key = `rec_${t.recId}_${t.month}`;
+    } else {
+      const normNote = (t.note || '').trim().toLowerCase();
+      key = `tx_${t.date}_${t.amount}_${t.type}_${t.category}_${normNote}`;
+    }
+
+    if (seen.has(key)) {
+      const existing = seen.get(key);
+      const timeDiff = Math.abs((t.createdAt || 0) - (existing.createdAt || 0));
+      if (t.recId || timeDiff < 180000 || t.id === existing.id) {
+        t.deleted = true;
+        t.updatedAt = now;
+        duplicatesRemoved++;
+        return;
+      }
+    }
+    seen.set(key, t);
+  });
+
+  if (duplicatesRemoved > 0) {
+    saveLocalOnly();
+    renderAll();
+    console.log(`Cleaned ${duplicatesRemoved} duplicate transactions`);
+  }
+  return duplicatesRemoved;
 }
 
 function load() {
@@ -1311,9 +1558,11 @@ function load() {
       if (d.settings) state.settings = Object.assign(state.settings, d.settings);
     }
   } catch (e) { console.error('Load failed:', e); }
-  if (!state.categories.length) state.categories = DEFAULT_CATEGORIES.map(c => Object.assign({}, c, { updatedAt: Date.now(), deleted: false }));
 
-  // Ensure default debt categories exist
+  if (!state.categories.length) {
+    state.categories = DEFAULT_CATEGORIES.map(c => Object.assign({}, c, { updatedAt: Date.now(), deleted: false }));
+  }
+
   DEFAULT_CATEGORIES.forEach(def => {
     if (!state.categories.find(c => c.id === def.id)) {
       state.categories.push(Object.assign({}, def, { updatedAt: Date.now(), deleted: false }));
@@ -1345,10 +1594,12 @@ function load() {
     state.currentCategory = DEFAULT_CATEGORY_ID;
     state.recCategory = DEFAULT_CATEGORY_ID;
   }
+
+  cleanDuplicates();
 }
 
 // ═══════════════════════════════════════════════════════════════
-// RECURRING
+// RECURRING (Deterministic IDs to prevent multi-device duplicates)
 // ═══════════════════════════════════════════════════════════════
 function processRecurring() {
   const today = new Date();
@@ -1365,19 +1616,32 @@ function processRecurring() {
     if (todayDay < effectiveDay) return;
 
     const date = new Date(today.getFullYear(), today.getMonth(), effectiveDay);
-    const iso = date.toISOString().split('T')[0];
-    const exists = state.transactions.some(t => t.recId === rec.id && t.date === iso && !t.deleted);
+    const iso = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(effectiveDay).padStart(2, '0')}`;
+    
+    // Deterministic ID prevents multi-device duplicate generation
+    const deterministicId = `rec_${rec.id}_${thisMonth}`;
+    const exists = state.transactions.some(t => 
+      !t.deleted && (
+        t.id === deterministicId || 
+        (t.recId === rec.id && (t.month === thisMonth || t.date.startsWith(thisMonth)))
+      )
+    );
+
     if (exists) { rec.lastRun = thisMonth; return; }
     
     state.transactions.push({
-      id: uid(), amount: rec.amount, type: rec.type, category: rec.category,
+      id: deterministicId, amount: rec.amount, type: rec.type, category: rec.category,
       date: iso, note: rec.note || '(recurring)', month: thisMonth,
       createdAt: Date.now(), updatedAt: Date.now(), deleted: false, recId: rec.id
     });
     rec.lastRun = thisMonth;
     created++;
   });
-  if (created > 0) { save(); toast('🔁 Created ' + created + ' recurring transaction(s)'); }
+
+  if (created > 0) { 
+    save(); 
+    toast('🔁 Created ' + created + ' recurring transaction(s)'); 
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1397,16 +1661,21 @@ function getBudgetValue(catId) {
 }
 function formatDateCompact(iso) {
   if (!iso) return '';
+  const parts = iso.split('-');
+  if (parts.length === 3) {
+    const day = parseInt(parts[2], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    return day + ' ' + MONTHS_SHORT[month];
+  }
   const d = new Date(iso + 'T00:00:00');
   return d.getDate() + ' ' + MONTHS_SHORT[d.getMonth()];
 }
 function formatDayShort(iso) {
   if (!iso) return '';
+  const now = todayISO();
   const d = new Date(iso + 'T00:00:00');
-  const now = new Date();
-  const today = now.toISOString().split('T')[0];
-  const yesterday = new Date(now - 864e5).toISOString().split('T')[0];
-  if (iso === today) return 'Today';
+  const yesterday = new Date(Date.now() - 864e5).toISOString().split('T')[0];
+  if (iso === now) return 'Today';
   if (iso === yesterday) return 'Yest.';
   return DAYS_SHORT[d.getDay()];
 }
@@ -1420,7 +1689,7 @@ function formatDateLong(iso) {
 // RENDER — HOME
 // ═══════════════════════════════════════════════════════════════
 function renderHome() {
-  const txs = activeTransactions().sort((a, b) => (b.date || '').localeCompare(a.date || '') || b.createdAt - a.createdAt);
+  const txs = activeTransactions().sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || 0) - (a.createdAt || 0));
 
   let income = 0, expense = 0, debtGiven = 0, debtTaken = 0;
   txs.forEach(t => {
@@ -1441,7 +1710,7 @@ function renderHome() {
   $('totalExpense').textContent = fmtShort(expense);
 
   const card = $('balanceCard');
-  if (card) card.classList.toggle('negative', balance < 0);
+  if (card) card.classList.toggle('negative', balance < -0.005);
 
   const today = todayISO();
   const weekAgo = new Date(Date.now() - 7 * 864e5).toISOString().split('T')[0];
@@ -1458,13 +1727,14 @@ function renderHome() {
   $('weekTotal').textContent = fmtCompact(weekExp);
   $('monthTotal').textContent = fmtCompact(monthExp);
 
-  // Net Debt Tile
+  // Net Debt Tile (Clickable)
   const debtTileVal = $('netDebtTotal');
   const debtTileLbl = $('debtLbl');
-  debtTileVal.textContent = (netDebt >= 0 ? '+' : '−') + fmtCompact(Math.abs(netDebt));
-  debtTileVal.style.color = netDebt > 0 ? 'var(--debt-given)' : (netDebt < 0 ? 'var(--debt-taken)' : 'var(--text)');
-  debtTileLbl.textContent = netDebt > 0 ? 'Lent (পাবো)' : (netDebt < 0 ? 'Owe (দেনা)' : 'Net Debt');
-  $('debtTile').title = `Lent: ${fmt(debtGiven)} | Borrowed: ${fmt(debtTaken)}`;
+  const cleanNetDebt = Math.abs(netDebt) < 0.005 ? 0 : netDebt;
+  debtTileVal.textContent = (cleanNetDebt >= 0 ? '+' : '−') + fmtCompact(Math.abs(cleanNetDebt));
+  debtTileVal.style.color = cleanNetDebt > 0 ? 'var(--debt-given)' : (cleanNetDebt < 0 ? 'var(--debt-taken)' : 'var(--text)');
+  debtTileLbl.textContent = cleanNetDebt > 0 ? 'Lent (পাবো)' : (cleanNetDebt < 0 ? 'Owe (দেনা)' : 'Net Debt');
+  $('debtTile').title = `Lent: ${fmt(debtGiven)} | Borrowed: ${fmt(debtTaken)} (Tap for Ledger)`;
 
   let filtered = txs;
   if (state.filter !== 'all') {
@@ -1522,7 +1792,7 @@ function renderTxTable(container, txs) {
 
     html += `<tr class="day-header-row"><td colspan="4">${formatDateLong(date)} <span class="day-subtotal">${parts.join(' | ')}</span></td></tr>`;
 
-    dayTxs.sort((a, b) => b.createdAt - a.createdAt).forEach(t => {
+    dayTxs.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).forEach(t => {
       const cat = getCategory(t.category);
       let sign = '−';
       let typeLabel = '';
@@ -1552,6 +1822,178 @@ function renderTxTable(container, txs) {
 
   container.querySelectorAll('tbody tr[data-id]').forEach(el => {
     el.addEventListener('click', () => openEdit(el.dataset.id));
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DEBT & STAFF LEDGER MODAL (NEW)
+// ═══════════════════════════════════════════════════════════════
+function openDebtModal() {
+  const txs = activeTransactions()
+    .filter(t => t.type === 'debt_given' || t.type === 'debt_taken')
+    .sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || 0) - (a.createdAt || 0));
+
+  let totalLent = 0;
+  let totalBorrowed = 0;
+  const peopleMap = new Map();
+
+  txs.forEach(t => {
+    if (t.type === 'debt_given') totalLent += t.amount;
+    else if (t.type === 'debt_taken') totalBorrowed += t.amount;
+
+    let rawNote = (t.note || '').trim();
+    let personName = rawNote;
+    if (!personName) {
+      const cat = getCategory(t.category);
+      personName = cat.name || 'Unassigned';
+    } else {
+      personName = rawNote.replace(/^(advance\s+to|loan\s+to|paid\s+to|borrowed\s+from|from|to)\s+/i, '').trim();
+      const parenIdx = personName.indexOf('(');
+      if (parenIdx > 2) personName = personName.substring(0, parenIdx).trim();
+    }
+
+    if (!peopleMap.has(personName)) {
+      peopleMap.set(personName, { name: personName, lent: 0, borrowed: 0, count: 0, txs: [] });
+    }
+    const p = peopleMap.get(personName);
+    p.count++;
+    p.txs.push(t);
+    if (t.type === 'debt_given') p.lent += t.amount;
+    else p.borrowed += t.amount;
+  });
+
+  const netDebt = totalLent - totalBorrowed;
+  const cleanNet = Math.abs(netDebt) < 0.005 ? 0 : netDebt;
+
+  $('debtModalLent').textContent = fmtShort(totalLent);
+  $('debtModalBorrowed').textContent = fmtShort(totalBorrowed);
+  $('debtModalNet').textContent = (cleanNet >= 0 ? '+' : '−') + fmtCompact(Math.abs(cleanNet));
+
+  const netCard = $('debtModalNetCard');
+  const netLbl = $('debtModalNetLbl');
+  if (cleanNet > 0) {
+    netLbl.textContent = 'Net: Staff Owes You (পাবো)';
+    netCard.className = 'debt-sum-card net';
+    $('debtModalNet').style.color = 'var(--debt-given)';
+  } else if (cleanNet < 0) {
+    netLbl.textContent = 'Net: You Owe Staff (দেনা)';
+    netCard.className = 'debt-sum-card net negative';
+    $('debtModalNet').style.color = 'var(--debt-taken)';
+  } else {
+    netLbl.textContent = 'Net Debt (Settled)';
+    netCard.className = 'debt-sum-card net';
+    $('debtModalNet').style.color = 'var(--text2)';
+  }
+
+  // Render People Tab
+  const peopleArr = Array.from(peopleMap.values()).sort((a, b) => Math.abs(b.lent - b.borrowed) - Math.abs(a.lent - a.borrowed));
+  const peopleContainer = $('staffDebtList');
+
+  if (peopleArr.length === 0) {
+    peopleContainer.innerHTML = '<div class="empty" style="padding:24px;"><span class="big" style="font-size:1.8rem;">🤝</span>No debt transactions found<br><span style="font-size:0.65rem;opacity:0.7;">Tap buttons below to record money lent or borrowed</span></div>';
+  } else {
+    peopleContainer.innerHTML = peopleArr.map(p => {
+      const pNet = p.lent - p.borrowed;
+      let badgeClass = 'settled';
+      let badgeText = 'Settled';
+      if (pNet > 0.005) { badgeClass = 'owes-you'; badgeText = 'Owes You (পাবেন)'; }
+      else if (pNet < -0.005) { badgeClass = 'you-owe'; badgeText = 'You Owe (দেনা)'; }
+
+      return `
+        <div class="staff-debt-card" data-person="${escapeHtml(p.name)}">
+          <div>
+            <div class="s-name"><span>👤</span> ${escapeHtml(p.name)}</div>
+            <div class="s-sub">Lent: ${fmtCompact(p.lent)} • Repaid/Bor: ${fmtCompact(p.borrowed)} (${p.count} tx)</div>
+          </div>
+          <div class="s-right">
+            <div class="s-net" style="color: ${pNet > 0 ? 'var(--debt-given)' : (pNet < 0 ? 'var(--debt-taken)' : 'var(--text2)')};">
+              ${(pNet >= 0 ? '+' : '−')}${fmtCompact(Math.abs(pNet))}
+            </div>
+            <span class="s-badge ${badgeClass}">${badgeText}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    peopleContainer.querySelectorAll('.staff-debt-card').forEach(card => {
+      card.addEventListener('click', () => {
+        showDebtHistory(card.dataset.person);
+      });
+    });
+  }
+
+  // Render History Tab
+  state.debtSelectedPerson = null;
+  renderDebtHistoryList(txs);
+  setDebtTab('people');
+  $('debtModalOverlay').classList.add('open');
+}
+
+function setDebtTab(tabName) {
+  $('debtTabBtnPeople').classList.toggle('active', tabName === 'people');
+  $('debtTabBtnHistory').classList.toggle('active', tabName === 'history');
+  if (tabName === 'people') {
+    $('debtTabPeople').style.display = 'block';
+    $('debtTabHistory').style.display = 'none';
+  } else {
+    $('debtTabPeople').style.display = 'none';
+    $('debtTabHistory').style.display = 'block';
+  }
+}
+
+function showDebtHistory(personName) {
+  state.debtSelectedPerson = personName;
+  const txs = activeTransactions()
+    .filter(t => t.type === 'debt_given' || t.type === 'debt_taken')
+    .filter(t => {
+      if (!personName) return true;
+      const note = (t.note || '').toLowerCase();
+      const cat = getCategory(t.category);
+      return note.includes(personName.toLowerCase()) || cat.name.toLowerCase().includes(personName.toLowerCase());
+    })
+    .sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || 0) - (a.createdAt || 0));
+
+  $('debtFilterHeader').style.display = personName ? 'flex' : 'none';
+  if (personName) $('debtFilterName').textContent = `Showing ledger for: ${personName}`;
+  renderDebtHistoryList(txs);
+  setDebtTab('history');
+}
+
+function renderDebtHistoryList(txs) {
+  const container = $('debtTxList');
+  if (txs.length === 0) {
+    container.innerHTML = '<div class="empty" style="padding:20px;">No debt records</div>';
+    return;
+  }
+  container.innerHTML = '<table class="tx-table"><colgroup>' +
+    '<col class="date-col">' +
+    '<col class="note-col">' +
+    '<col class="amount-col">' +
+    '</colgroup><thead><tr>' +
+    '<th class="date-col">Date</th>' +
+    '<th class="note-col">Person / Note</th>' +
+    '<th class="amount-col right">Amount</th>' +
+    '</tr></thead><tbody>' +
+    txs.map(t => {
+      const isLent = t.type === 'debt_given';
+      const sign = isLent ? '🤝−' : '🤲+';
+      const typeLabel = isLent 
+        ? '<span style="font-size:0.52rem;color:var(--debt-given);font-weight:700;">[LENT]</span> ' 
+        : '<span style="font-size:0.52rem;color:var(--debt-taken);font-weight:700;">[BORROWED]</span> ';
+      const noteHtml = t.note ? escapeHtml(t.note) : '<span class="empty-note">—</span>';
+      return `<tr data-id="${t.id}">` +
+        `<td class="date-cell">${formatDateCompact(t.date)}<span class="day-sub">${formatDayShort(t.date)}</span></td>` +
+        `<td class="note-cell">${typeLabel}${noteHtml}</td>` +
+        `<td class="amount-cell ${t.type} right">${sign}${fmtCompact(t.amount)}</td>` +
+        `</tr>`;
+    }).join('') +
+    '</tbody></table>';
+
+  container.querySelectorAll('tbody tr[data-id]').forEach(el => {
+    el.addEventListener('click', () => {
+      $('debtModalOverlay').classList.remove('open');
+      openEdit(el.dataset.id);
+    });
   });
 }
 
@@ -1763,7 +2205,7 @@ function openCategoryMonthDetail(catId, monthKeyStr) {
   const cat = getCategory(catId);
   const txs = activeTransactions()
     .filter(t => t.category === catId && t.date.startsWith(monthKeyStr))
-    .sort((a, b) => (b.date || '').localeCompare(a.date || '') || b.createdAt - a.createdAt);
+    .sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || 0) - (a.createdAt || 0));
   const total = txs.reduce((s, t) => s + t.amount, 0);
   $('dayModalTitle').innerHTML = `${cat.icon} ${escapeHtml(cat.name)} — ${fmtMonth(monthKeyStr)}`;
   $('dayDetailSummary').innerHTML = `
@@ -1822,7 +2264,7 @@ function renderCalendar() {
   $('calExpense').textContent = fmtShort(totalExp);
   $('calBalance').textContent = fmtShort(bal);
   const calBalItem = $('calBalanceItem');
-  if (calBalItem) calBalItem.classList.toggle('negative', bal < 0);
+  if (calBalItem) calBalItem.classList.toggle('negative', bal < -0.005);
 
   const grid = $('calGrid');
   const dowHtml = DAYS_MINI.map(d => `<div class="cal-dow">${d}</div>`).join('');
@@ -1862,7 +2304,7 @@ function openDayDetail(iso) {
   state.dayModalDate = iso;
   const d = new Date(iso + 'T00:00:00');
   const dayLabel = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-  const txs = activeTransactions().filter(t => t.date === iso).sort((a, b) => b.createdAt - a.createdAt);
+  const txs = activeTransactions().filter(t => t.date === iso).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   const totalInc = txs.filter(t => t.type === 'income' || t.type === 'debt_taken').reduce((s, t) => s + t.amount, 0);
   const totalExp = txs.filter(t => t.type === 'expense' || t.type === 'debt_given').reduce((s, t) => s + t.amount, 0);
   $('dayModalTitle').textContent = dayLabel;
@@ -1957,7 +2399,7 @@ function renderSearch() {
   }
   if (from) results = results.filter(t => t.date >= from);
   if (to) results = results.filter(t => t.date <= to);
-  results.sort((a, b) => (b.date || '').localeCompare(a.date || '') || b.createdAt - a.createdAt);
+  results.sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || 0) - (a.createdAt || 0));
 
   $('searchCount').textContent = results.length + ' result' + (results.length !== 1 ? 's' : '');
   const totalExp = results.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
@@ -2054,7 +2496,6 @@ function renderCatGrid() {
   const grid = $('catGrid');
   let cats;
   if (state.currentType === 'debt_given' || state.currentType === 'debt_taken') {
-    // Show debt categories or general
     cats = state.categories.filter(c => (c.type === 'debt' || c.type === 'expense') && !c.deleted);
   } else {
     cats = state.categories.filter(c => c.type === state.currentType && !c.deleted);
@@ -2290,6 +2731,7 @@ function persistTransaction() {
       }
     }
   }
+
   save();
   renderAll();
   populateSearchDropdowns();
@@ -2591,6 +3033,7 @@ function importCSV(file) {
         });
         imported++;
       }
+      cleanDuplicates();
       save(); renderAll(); populateSearchDropdowns();
       toast('📥 Imported ' + imported + ' transactions');
     } catch (err) { toast('❌ Import failed: ' + err.message, true); }
@@ -2648,7 +3091,7 @@ function applyTheme() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// SYNC ENGINE (GOOGLE SHEETS)
+// REAL-TIME SYNC ENGINE (GOOGLE SHEETS)
 // ═══════════════════════════════════════════════════════════════
 const SYNC = {
   URL_KEY: 'office_exp_sheet_url',
@@ -2661,18 +3104,20 @@ const SYNC = {
   deviceName: '',
   enabled: false,
   polling: null,
-  POLL_VISIBLE_MS: 30000,
-  POLL_HIDDEN_MS: 300000,
+  POLL_VISIBLE_MS: 10000,    // Real-time: poll every 10 seconds when tab is open
+  POLL_HIDDEN_MS: 60000,     // 1 minute when minimized
   lastRemoteUpdatedAt: 0,
+  lastRemoteHash: '',
   lastLocalHash: '',
   pushTimer: null,
-  PUSH_DEBOUNCE_MS: 2000,
+  PUSH_DEBOUNCE_MS: 300,     // Instant push within 300ms of saving
   isPushing: false,
   isPulling: false,
+  isInitialPullDone: false,  // Prevents pushing stale local cache before pulling
   consecutiveFailures: 0,
   backoffTimer: null,
   queue: [],
-  MAX_QUEUE: 20,
+  MAX_QUEUE: 30,
   activityLevel: 'active',
   lastActivityAt: Date.now(),
   IDLE_THRESHOLD_MS: 120000
@@ -2740,7 +3185,7 @@ function syncUpdateUI() {
     const offline = !navigator.onLine;
     if (offline) {
       syncSetDot('err');
-      el.textContent = '🔴 Offline — changes will queue';
+      el.textContent = '🔴 Offline — changes queued';
       el.className = 'sync-status err';
     } else if (failing) {
       syncSetDot('err');
@@ -2748,11 +3193,11 @@ function syncUpdateUI() {
       el.className = 'sync-status err';
     } else if (queued) {
       syncSetDot('on');
-      el.textContent = '📥 ' + SYNC.queue.length + ' change(s) queued';
+      el.textContent = '📥 ' + SYNC.queue.length + ' change(s) syncing';
       el.className = 'sync-status';
     } else {
       syncSetDot('on');
-      el.textContent = '✅ Connected to Google Sheet';
+      el.textContent = '🟢 Real-time sync active (Google Sheet)';
       el.className = 'sync-status ok';
     }
   }
@@ -2778,7 +3223,7 @@ function syncBuildPayload() {
 }
 
 function syncComputeHash(payload) {
-  const d = payload.data || {};
+  const d = (payload && payload.data) ? payload.data : {};
   const txs = (d.transactions || [])
     .map(t => t.id + '|' + (t.updatedAt || 0) + '|' + (t.deleted ? '1' : '0'))
     .sort();
@@ -2805,50 +3250,60 @@ function syncApplyRemote(remote) {
   const d = remote.data;
   let changed = false;
 
+  // 1. Transactions Merge (LWW)
   if (Array.isArray(d.transactions)) {
     const map = new Map();
     (state.transactions || []).forEach(t => map.set(t.id, t));
-    const before = map.size;
+    const beforeCount = map.size;
+
     d.transactions.forEach(rt => {
       const local = map.get(rt.id);
       if (!local) {
         map.set(rt.id, Object.assign({ deleted: false }, rt));
+        changed = true;
       } else {
         const rTs = rt.updatedAt || rt.createdAt || 0;
         const lTs = local.updatedAt || local.createdAt || 0;
         if (rTs > lTs) {
           map.set(rt.id, Object.assign({}, local, rt));
+          changed = true;
         } else if (rTs === lTs && !!rt.deleted !== !!local.deleted) {
           map.set(rt.id, Object.assign({}, local, { deleted: !!rt.deleted }));
+          changed = true;
         }
       }
     });
-    const merged = Array.from(map.values());
-    if (merged.length !== before) changed = true;
-    state.transactions = merged;
+
+    state.transactions = Array.from(map.values());
+    if (state.transactions.length !== beforeCount) changed = true;
   }
 
+  // Deduplicate right after merging
+  const dupesCleaned = cleanDuplicates();
+  if (dupesCleaned > 0) changed = true;
+
+  // 2. Categories Merge
   if (Array.isArray(d.categories)) {
     const map = new Map();
     (state.categories || []).forEach(c => map.set(c.id, c));
-    const before = map.size;
     d.categories.forEach(rc => {
       const local = map.get(rc.id);
       if (!local) {
         map.set(rc.id, Object.assign({ deleted: false, updatedAt: 0 }, rc));
+        changed = true;
       } else {
         const rTs = rc.updatedAt || 0;
         const lTs = local.updatedAt || 0;
         if (rTs >= lTs) {
           map.set(rc.id, Object.assign({}, local, rc));
+          changed = true;
         }
       }
     });
-    const merged = Array.from(map.values());
-    if (merged.length !== before || JSON.stringify(merged) !== JSON.stringify(state.categories)) changed = true;
-    state.categories = merged;
+    state.categories = Array.from(map.values());
   }
 
+  // 3. Budgets Merge
   if (d.budgets && typeof d.budgets === 'object') {
     Object.keys(d.budgets).forEach(k => {
       const remoteB = d.budgets[k];
@@ -2864,36 +3319,49 @@ function syncApplyRemote(remote) {
     });
   }
 
+  // 4. Recurring Merge
   if (Array.isArray(d.recurring)) {
     const map = new Map();
     (state.recurring || []).forEach(r => map.set(r.id, r));
-    const before = map.size;
     d.recurring.forEach(rr => {
       const local = map.get(rr.id);
       if (!local) {
         map.set(rr.id, Object.assign({ deleted: false, updatedAt: 0 }, rr));
+        changed = true;
       } else {
         const rTs = rr.updatedAt || 0;
         const lTs = local.updatedAt || 0;
         if (rTs > lTs) {
           map.set(rr.id, Object.assign({}, local, rr));
+          changed = true;
         }
       }
     });
-    const merged = Array.from(map.values());
-    if (merged.length !== before || JSON.stringify(merged) !== JSON.stringify(state.recurring)) changed = true;
-    state.recurring = merged;
+    state.recurring = Array.from(map.values());
   }
 
+  // 5. Settings Merge
   if (d.settings && d.settings.theme && d.settings.theme !== state.settings.theme) {
     state.settings.theme = d.settings.theme;
     applyTheme();
     changed = true;
   }
 
-  if (changed) { renderAll(); populateSearchDropdowns(); }
-  SYNC.lastRemoteUpdatedAt = remote.updatedAt || 0;
+  // Save to local storage immediately so refresh never loses synced data!
+  saveLocalOnly();
+
+  // Update hash so we don't trigger unnecessary push echo
+  const currentPayload = syncBuildPayload();
+  const currentHash = syncComputeHash(currentPayload);
+  SYNC.lastLocalHash = currentHash;
+  localStorage.setItem(SYNC.HASH_KEY, currentHash);
+  SYNC.lastRemoteUpdatedAt = remote.updatedAt || Date.now();
   localStorage.setItem(SYNC.LAST_PULL_KEY, String(Date.now()));
+
+  if (changed) { 
+    renderAll(); 
+    populateSearchDropdowns(); 
+  }
   return changed;
 }
 
@@ -2912,7 +3380,11 @@ async function syncTestConnection() {
 
 async function syncPull(showUi) {
   if (!SYNC.enabled || SYNC.isPulling) return false;
-  if (!navigator.onLine) { if (showUi) toast('📴 Offline', true); syncUpdateButtonState(); return false; }
+  if (!navigator.onLine) { 
+    if (showUi) toast('📴 Offline', true); 
+    syncUpdateButtonState(); 
+    return false; 
+  }
   SYNC.isPulling = true;
   if (showUi) syncSetDot('syncing');
   try {
@@ -2921,17 +3393,27 @@ async function syncPull(showUi) {
     const remote = await r.json();
     if (remote.empty) {
       if (showUi) toast('ℹ️ Sheet is initialized & ready');
+      SYNC.isInitialPullDone = true;
       return false;
     }
-    if ((remote.updatedAt || 0) > SYNC.lastRemoteUpdatedAt) {
+
+    const remoteHash = syncComputeHash(remote);
+    const hasNewerTime = (remote.updatedAt || 0) > (SYNC.lastRemoteUpdatedAt || 0);
+    const hashMismatch = remoteHash !== SYNC.lastRemoteHash && remoteHash !== SYNC.lastLocalHash;
+
+    if (hasNewerTime || hashMismatch || !SYNC.isInitialPullDone) {
       const changed = syncApplyRemote(remote);
-      if (showUi && changed) toast('⬇ Pulled updates from Sheet');
+      SYNC.lastRemoteHash = remoteHash;
+      if (showUi && changed) toast('⬇ Synced updates from Sheet');
       else if (showUi) toast('✅ Up to date');
-    } else if (showUi) toast('✅ Up to date');
+    } else if (showUi) {
+      toast('✅ Up to date');
+    }
     
     SYNC.consecutiveFailures = 0;
     syncSetDot('on');
     syncUpdateButtonState();
+    SYNC.isInitialPullDone = true;
     return true;
   } catch (e) {
     SYNC.consecutiveFailures++;
@@ -2939,12 +3421,20 @@ async function syncPull(showUi) {
     syncUpdateButtonState();
     if (showUi) toast('❌ Pull failed: ' + e.message, true);
     return false;
-  } finally { SYNC.isPulling = false; syncUpdateUI(); }
+  } finally { 
+    SYNC.isPulling = false; 
+    syncUpdateUI(); 
+  }
 }
 
 async function syncPush(showUi, silent) {
   if (!SYNC.enabled || SYNC.isPushing) return false;
-  if (!navigator.onLine) { syncEnqueue(); if (showUi) toast('📴 Queued offline', true); syncUpdateButtonState(); return false; }
+  if (!navigator.onLine) { 
+    syncEnqueue(); 
+    if (showUi) toast('📴 Queued offline', true); 
+    syncUpdateButtonState(); 
+    return false; 
+  }
   SYNC.isPushing = true;
   if (showUi || !silent) syncSetDot('syncing');
   try {
@@ -2969,6 +3459,7 @@ async function syncPush(showUi, silent) {
 
     SYNC.lastRemoteUpdatedAt = payload.updatedAt;
     SYNC.lastLocalHash = hash;
+    SYNC.lastRemoteHash = hash;
     localStorage.setItem(SYNC.HASH_KEY, hash);
     localStorage.setItem(SYNC.LAST_PULL_KEY, String(Date.now()));
     SYNC.consecutiveFailures = 0;
@@ -2983,7 +3474,10 @@ async function syncPush(showUi, silent) {
     if (showUi) toast('❌ Push failed: ' + e.message, true);
     syncScheduleRetry();
     return false;
-  } finally { SYNC.isPushing = false; syncUpdateUI(); }
+  } finally { 
+    SYNC.isPushing = false; 
+    syncUpdateUI(); 
+  }
 }
 
 function syncEnqueue() {
@@ -2992,30 +3486,49 @@ function syncEnqueue() {
   try { localStorage.setItem(SYNC.QUEUE_KEY, JSON.stringify(SYNC.queue)); } catch (e) {}
   syncUpdateUI();
 }
+
 async function syncReplayQueue() {
   if (SYNC.queue.length === 0 || !navigator.onLine || !SYNC.enabled) return;
-  SYNC.queue = []; try { localStorage.removeItem(SYNC.QUEUE_KEY); } catch (e) {}
-  await syncPush(false, true); toast('📤 Offline changes synced');
+  SYNC.queue = []; 
+  try { localStorage.removeItem(SYNC.QUEUE_KEY); } catch (e) {}
+  await syncPush(false, true); 
+  toast('📤 Offline changes synced');
 }
+
 function syncSchedulePush() {
   if (!SYNC.enabled) return;
   SYNC.lastActivityAt = Date.now();
   if (SYNC.pushTimer) clearTimeout(SYNC.pushTimer);
   SYNC.pushTimer = setTimeout(() => syncPush(false, true), SYNC.PUSH_DEBOUNCE_MS);
 }
+
 function syncScheduleRetry() {
   if (SYNC.backoffTimer || SYNC.consecutiveFailures === 0 || SYNC.consecutiveFailures > 6) return;
-  const delays = [5000, 15000, 45000, 120000, 300000, 600000];
+  const delays = [3000, 10000, 30000, 60000, 120000, 300000];
   const delay = delays[Math.min(SYNC.consecutiveFailures - 1, delays.length - 1)];
   SYNC.backoffTimer = setTimeout(() => { SYNC.backoffTimer = null; syncPush(false, true); }, delay);
 }
+
 function syncUpdatePolling() {
   if (SYNC.polling) clearInterval(SYNC.polling);
   if (!SYNC.enabled) return;
   const interval = document.hidden ? SYNC.POLL_HIDDEN_MS : SYNC.POLL_VISIBLE_MS;
-  SYNC.polling = setInterval(() => { if (document.hidden) return; syncPull(false); }, interval);
+  SYNC.polling = setInterval(() => { 
+    if (document.hidden) return; 
+    syncPull(false); 
+  }, interval);
 }
-function syncStartPolling() { syncUpdatePolling(); if (navigator.onLine) syncPull(false); }
+
+async function syncStartPolling() { 
+  syncUpdatePolling(); 
+  if (navigator.onLine) {
+    await syncPull(false);
+    // After initial pull, if local queue exists, replay it
+    if (SYNC.queue.length > 0) {
+      await syncReplayQueue();
+    }
+  } 
+}
 
 // ═══════════════════════════════════════════════════════════════
 // EVENT BINDINGS
@@ -3028,6 +3541,33 @@ function bindEvents() {
     switchView('search');
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     setTimeout(() => $('searchInput').focus(), 100);
+  });
+
+  // Debt Tile Detail Popup
+  $('debtTile').addEventListener('click', openDebtModal);
+
+  // Debt Modal Buttons
+  $('debtTabBtnPeople').addEventListener('click', () => setDebtTab('people'));
+  $('debtTabBtnHistory').addEventListener('click', () => showDebtHistory(null));
+  $('debtClearFilterBtn').addEventListener('click', () => showDebtHistory(null));
+  $('debtCloseBtn').addEventListener('click', () => $('debtModalOverlay').classList.remove('open'));
+  $('debtModalCloseTop').addEventListener('click', () => $('debtModalOverlay').classList.remove('open'));
+  $('debtModalOverlay').addEventListener('click', e => { 
+    if (e.target === $('debtModalOverlay')) $('debtModalOverlay').classList.remove('open'); 
+  });
+
+  $('debtAddLentBtn').addEventListener('click', () => {
+    $('debtModalOverlay').classList.remove('open');
+    openAdd();
+    const btn = document.querySelector('#typeToggle button[data-type="debt_given"]');
+    if (btn) btn.click();
+  });
+
+  $('debtAddBorrowedBtn').addEventListener('click', () => {
+    $('debtModalOverlay').classList.remove('open');
+    openAdd();
+    const btn = document.querySelector('#typeToggle button[data-type="debt_taken"]');
+    if (btn) btn.click();
   });
 
   $('cancelBtn').addEventListener('click', closeModal);
@@ -3180,6 +3720,16 @@ function bindEvents() {
     if (document.getElementById('view-stats').classList.contains('active')) renderCharts();
   });
 
+  $('cleanDupesBtn').addEventListener('click', () => {
+    const count = cleanDuplicates();
+    if (count > 0) {
+      save();
+      toast(`🧹 Removed ${count} duplicate(s)`);
+    } else {
+      toast('✅ No duplicates found');
+    }
+  });
+
   $('exportCsvBtn').addEventListener('click', exportCSV);
   $('importCsvBtn').addEventListener('click', () => $('csvFileInput').click());
   $('csvFileInput').addEventListener('change', e => {
@@ -3262,7 +3812,8 @@ function bindEvents() {
   document.addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
     if (e.key === 'Escape') {
-      if ($('modalOverlay').classList.contains('open')) closeModal();
+      if ($('debtModalOverlay').classList.contains('open')) $('debtModalOverlay').classList.remove('open');
+      else if ($('modalOverlay').classList.contains('open')) closeModal();
       else if ($('dayModalOverlay').classList.contains('open')) $('dayModalOverlay').classList.remove('open');
       else if ($('catModalOverlay').classList.contains('open')) closeCatModal();
       else if ($('recModalOverlay').classList.contains('open')) closeRecModal();
@@ -3273,7 +3824,18 @@ function bindEvents() {
     if (e.key === '/') { e.preventDefault(); $('searchHdrBtn').click(); }
   });
 
-  window.addEventListener('beforeunload', () => { if (SYNC.enabled && SYNC.pushTimer) syncPush(false, true); });
+  // Seamless Real-Time Tab & Window Focus Listeners
+  window.addEventListener('beforeunload', () => { 
+    if (SYNC.enabled && SYNC.pushTimer) syncPush(false, true); 
+  });
+  
+  window.addEventListener('focus', () => {
+    if (SYNC.enabled) {
+      syncPull(false);
+      syncUpdatePolling();
+    }
+  });
+
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       if (SYNC.enabled && SYNC.pushTimer) { clearTimeout(SYNC.pushTimer); SYNC.pushTimer = null; syncPush(false, true); }
@@ -3283,28 +3845,37 @@ function bindEvents() {
       syncReplayQueue();
     }
   });
+
   window.addEventListener('online', () => {
     toast('🟢 Online');
     syncUpdateButtonState();
     if (SYNC.enabled) { syncReplayQueue(); syncPull(false); }
   });
+
   window.addEventListener('offline', () => {
     toast('🔴 Offline — changes queue', true);
     syncUpdateButtonState();
     syncUpdateUI();
   });
 
-  ['click', 'keydown', 'touchstart', 'scroll'].forEach(ev => {
+  ['click', 'keydown', 'touchstart'].forEach(ev => {
     document.addEventListener(ev, () => {
       SYNC.lastActivityAt = Date.now();
-      if (SYNC.activityLevel === 'idle') { SYNC.activityLevel = 'active'; syncUpdatePolling(); }
+      if (SYNC.activityLevel === 'idle') { 
+        SYNC.activityLevel = 'active'; 
+        syncUpdatePolling(); 
+      }
     }, { passive: true });
   });
+
   setInterval(() => {
     if (!SYNC.enabled) return;
     const idle = Date.now() - SYNC.lastActivityAt > SYNC.IDLE_THRESHOLD_MS;
     const lvl = document.hidden ? 'hidden' : (idle ? 'idle' : 'active');
-    if (lvl !== SYNC.activityLevel) { SYNC.activityLevel = lvl; syncUpdatePolling(); }
+    if (lvl !== SYNC.activityLevel) { 
+      SYNC.activityLevel = lvl; 
+      syncUpdatePolling(); 
+    }
   }, 10000);
 }
 
@@ -3322,7 +3893,7 @@ function init() {
   syncUpdateButtonState();
   if (SYNC.enabled) syncStartPolling();
 
-  console.log('💼 Office Expense & Debt Tracker v11 initialized');
+  console.log('💼 Office Expense & Debt Tracker v12 (Real-Time Sync) initialized');
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
